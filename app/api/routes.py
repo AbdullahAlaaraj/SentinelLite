@@ -24,81 +24,225 @@ def ensure_uploads_table():
 ensure_uploads_table()
 
 
+def navbar():
+    return """
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/">Upload Log</a>
+        <a href="/alerts">Alerts</a>
+        <a href="/logs">Logs</a>
+    </div>
+    """
+
+
+def styles():
+    return """
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #020617;
+            color: white;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .navbar {
+            position: absolute;
+            top: 25px;
+            right: 50px;
+        }
+
+        .navbar a {
+            margin-left: 25px;
+            color: #38bdf8;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .navbar a:hover {
+            color: white;
+        }
+
+        .hero {
+            margin-top: 80px;
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            color: #94a3b8;
+            font-size: 18px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .metric {
+            background: #0f172a;
+            padding: 25px;
+            border-radius: 14px;
+            border: 1px solid #1e293b;
+            text-align: center;
+        }
+
+        .metric h2 {
+            color: #38bdf8;
+            font-size: 28px;
+            margin: 0;
+        }
+
+        .metric p {
+            color: #94a3b8;
+        }
+
+        .card {
+            background: #0f172a;
+            padding: 25px;
+            border-radius: 14px;
+            border: 1px solid #1e293b;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: #38bdf8;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0ea5e9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #0f172a;
+            margin-top: 30px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 14px;
+            border: 1px solid #1e293b;
+            text-align: left;
+        }
+
+        th {
+            background: #1e293b;
+        }
+
+        .high {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .status {
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        .upload-box {
+            border: 2px dashed #38bdf8;
+            padding: 35px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+            background: #020617;
+        }
+
+        .upload-box input {
+            color: white;
+            padding: 10px;
+        }
+
+        .upload-note {
+            color: #64748b;
+            margin-top: 15px;
+        }
+    </style>
+    """
+
+
 @router.get("/", response_class=HTMLResponse)
 def home():
-    return """
+    cursor.execute("SELECT COUNT(*) FROM uploads")
+    uploads = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM alerts")
+    alerts = cursor.fetchone()[0]
+
+    return f"""
     <html>
-        <head>
-            <title>SentinelLite Dashboard</title>
-            <style>
-                body {
-                    font-family: Arial;
-                    background: #0f172a;
-                    color: white;
-                    padding: 40px;
-                }
+    <head>
+        <title>SentinelLite Dashboard</title>
+        {styles()}
+    </head>
+    <body>
 
-                .navbar {
-                    position: absolute;
-                    top: 20px;
-                    right: 40px;
-                }
+        {navbar()}
 
-                .navbar a {
-                    margin-left: 20px;
-                    color: #38bdf8;
-                    text-decoration: none;
-                    font-weight: bold;
-                }
+        <div class="hero">
+            <h1>SentinelLite</h1>
+            <p>SIEM-inspired authentication log analysis platform</p>
+        </div>
 
-                .card {
-                    background: #1e293b;
-                    padding: 20px;
-                    margin: 20px 0;
-                    border-radius: 10px;
-                }
-
-                button {
-                    padding: 10px;
-                    background: #38bdf8;
-                    border: none;
-                    cursor: pointer;
-                }
-
-                a {
-                    color: #38bdf8;
-                    text-decoration: none;
-                }
-            </style>
-        </head>
-        <body>
-
-            <div class="navbar">
-                <a href="/">Home</a>
-                <a href="/">Upload Log</a>
-                <a href="/alerts">Alerts</a>
-                <a href="/logs">Logs</a>
+        <div class="grid">
+            <div class="metric">
+                <h2>{uploads}</h2>
+                <p>Uploads</p>
             </div>
+            <div class="metric">
+                <h2>{alerts}</h2>
+                <p>Alerts</p>
+            </div>
+            <div class="metric">
+                <h2>1</h2>
+                <p>Detection Rules</p>
+            </div>
+            <div class="metric">
+                <h2 class="status">ACTIVE</h2>
+                <p>System Status</p>
+            </div>
+        </div>
 
-            <h1>SentinelLite Dashboard</h1>
+        <div class="card">
+            <h2>Upload Authentication Log</h2>
+            <p style="color:#94a3b8;">
+                Select a Linux authentication log file for threat analysis
+            </p>
 
-            <div class="card">
-                <h2>Upload Log File</h2>
-                <form action="/upload-log" enctype="multipart/form-data" method="post">
+            <form action="/upload-log" enctype="multipart/form-data" method="post">
+                <div class="upload-box">
                     <input name="file" type="file">
-                    <button type="submit">Upload</button>
-                </form>
-            </div>
+                    <p class="upload-note">Supported: .log / .txt</p>
+                </div>
 
-            <div class="card">
-                <a href="/alerts">View Alerts</a>
-            </div>
+                <button type="submit">Analyze Log</button>
+            </form>
+        </div>
 
-            <div class="card">
-                <a href="/logs">View Upload History</a>
-            </div>
+        <div class="card">
+            <h2>Platform Overview</h2>
+            <p>
+                Analyze uploaded authentication logs, detect brute-force activity,
+                persist security alerts, and review historical ingestion events.
+            </p>
+        </div>
 
-        </body>
+    </body>
     </html>
     """
 
@@ -112,7 +256,6 @@ async def upload_log(file: UploadFile = File(...)):
 
     for line in lines:
         parsed = parse_linux_auth(line)
-
         if parsed:
             parsed_logs.append(parsed)
 
@@ -120,11 +263,7 @@ async def upload_log(file: UploadFile = File(...)):
 
     cursor.execute(
         "INSERT INTO uploads (filename, uploaded_at, parsed_lines) VALUES (?, ?, ?)",
-        (
-            file.filename,
-            upload_time,
-            len(parsed_logs)
-        )
+        (file.filename, upload_time, len(parsed_logs))
     )
 
     alerts = run_rules(parsed_logs)
@@ -151,64 +290,17 @@ def alerts():
     cursor.execute("SELECT * FROM alerts")
     rows = cursor.fetchall()
 
-    html = """
+    html = f"""
     <html>
     <head>
-        <title>SentinelLite Alerts</title>
-        <style>
-            body {
-                font-family: Arial;
-                background: #0f172a;
-                color: white;
-                padding: 40px;
-            }
-
-            .navbar {
-                position: absolute;
-                top: 20px;
-                right: 40px;
-            }
-
-            .navbar a {
-                margin-left: 20px;
-                color: #38bdf8;
-                text-decoration: none;
-                font-weight: bold;
-            }
-
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                background: #1e293b;
-                margin-top: 40px;
-            }
-
-            th, td {
-                padding: 12px;
-                border: 1px solid #334155;
-                text-align: left;
-            }
-
-            th {
-                background: #334155;
-            }
-
-            .high {
-                color: red;
-                font-weight: bold;
-            }
-        </style>
+        <title>Alerts</title>
+        {styles()}
     </head>
     <body>
-
-        <div class="navbar">
-            <a href="/">Home</a>
-            <a href="/">Upload Log</a>
-            <a href="/alerts">Alerts</a>
-            <a href="/logs">Logs</a>
+        {navbar()}
+        <div class="hero">
+            <h1>Security Alerts</h1>
         </div>
-
-        <h1>SentinelLite Alerts</h1>
 
         <table>
             <tr>
@@ -223,22 +315,17 @@ def alerts():
 
     for row in rows:
         html += f"""
-            <tr>
-                <td>{row[0]}</td>
-                <td>{row[1]}</td>
-                <td>{row[2]}</td>
-                <td class='high'>{row[3]}</td>
-                <td>{row[4]}</td>
-                <td>{row[5]}</td>
-            </tr>
+        <tr>
+            <td>{row[0]}</td>
+            <td>{row[1]}</td>
+            <td>{row[2]}</td>
+            <td class="high">{row[3]}</td>
+            <td>{row[4]}</td>
+            <td>{row[5]}</td>
+        </tr>
         """
 
-    html += """
-        </table>
-    </body>
-    </html>
-    """
-
+    html += "</table></body></html>"
     return html
 
 
@@ -247,59 +334,17 @@ def logs():
     cursor.execute("SELECT * FROM uploads")
     rows = cursor.fetchall()
 
-    html = """
+    html = f"""
     <html>
     <head>
-        <title>SentinelLite Upload History</title>
-        <style>
-            body {
-                font-family: Arial;
-                background: #0f172a;
-                color: white;
-                padding: 40px;
-            }
-
-            .navbar {
-                position: absolute;
-                top: 20px;
-                right: 40px;
-            }
-
-            .navbar a {
-                margin-left: 20px;
-                color: #38bdf8;
-                text-decoration: none;
-                font-weight: bold;
-            }
-
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                background: #1e293b;
-                margin-top: 40px;
-            }
-
-            th, td {
-                padding: 12px;
-                border: 1px solid #334155;
-                text-align: left;
-            }
-
-            th {
-                background: #334155;
-            }
-        </style>
+        <title>Upload History</title>
+        {styles()}
     </head>
     <body>
-
-        <div class="navbar">
-            <a href="/">Home</a>
-            <a href="/">Upload Log</a>
-            <a href="/alerts">Alerts</a>
-            <a href="/logs">Logs</a>
+        {navbar()}
+        <div class="hero">
+            <h1>Upload History</h1>
         </div>
-
-        <h1>Uploaded Logs</h1>
 
         <table>
             <tr>
@@ -312,20 +357,15 @@ def logs():
 
     for row in rows:
         html += f"""
-            <tr>
-                <td>{row[0]}</td>
-                <td>{row[1]}</td>
-                <td>{row[2]}</td>
-                <td>{row[3]}</td>
-            </tr>
+        <tr>
+            <td>{row[0]}</td>
+            <td>{row[1]}</td>
+            <td>{row[2]}</td>
+            <td>{row[3]}</td>
+        </tr>
         """
 
-    html += """
-        </table>
-    </body>
-    </html>
-    """
-
+    html += "</table></body></html>"
     return html
 
 
@@ -333,7 +373,6 @@ def logs():
 def stats():
     cursor.execute("SELECT COUNT(*) FROM alerts")
     count = cursor.fetchone()[0]
-
     return {"alerts": count}
 
 
